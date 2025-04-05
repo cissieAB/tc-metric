@@ -40,13 +40,15 @@ The below process is test and verified on "nvidarm" with the DPU Ethernet addres
             }
         ]
         ```
-3. Pin the map for the user space code: `sudo bpftool map pin name ip_src_map /sys/fs/bpf/ip_src_map`. Can either pin by name or id. Dump this map by pinned address: `sudo bpftool map dump pin /sys/fs/bpf/ip_src_map`. If you skip this step, you might end up open 2 eBPF map instances when you run the userspace code and never get any traffic stats for your userspace one.
+3. **PIN** the map for the user space code: `sudo bpftool map pin name ip_src_map /sys/fs/bpf/ip_src_map`. Can either pin by name or id. Dump this map by pinned address: `sudo bpftool map dump pin /sys/fs/bpf/ip_src_map`. If you skip this step, you might end up open 2 eBPF map instances when you run the userspace code and never get any traffic stats for your userspace one.
 
 4. Compile the userspace program: `gcc -o tc_user.o tc_user.c -lbpf`
 5. Run the userspace program: `sudo ./tc_user.o`. The eexpected output is shown in the next section.
 
-6. **CLEAN UP** the rules.
+6. **UNPIN** the map and **CLEAN UP** the rules.
     ```bash
+    # Pinning the map make it persistent and you can not deattach it.
+    $ sudo rm /sys/fs/bpf/<map_path>
     $ sudo tc filter del dev enP2s1f0np0 ingress
     $ sudo tc qdisc del dev enP2s1f0np0 clsact
     $ sudo bpftool map  # no map showed up
